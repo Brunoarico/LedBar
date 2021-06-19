@@ -10,13 +10,13 @@ enum LedState {
 };
 
 namespace Origin {
-    LedDevice::LedDevice(uint32_t pinClock, uint32_t pinData, bool reverseShow, LedType type) {
+    LedDevice::LedDevice(uint32_t pinClock, uint32_t pinData, bool reverseShow, int numLeds, LedType type) {
         this->pinClock = pinClock;
         this->pinData = pinData;
         this->reverseShow = reverseShow;
         this->type = type;
         this->countOfShows = countOfLed();                                                     //number of leds
-
+        this->numLeds = numLeds;
         for (uint32_t i = 0; i < LED_MAX_COUNT; i++) led[i] = LED_TURN_OFF;                    //Turn off all leds
 
         pinMode(pinClock, OUTPUT);
@@ -38,34 +38,60 @@ namespace Origin {
         }
     }
 
+    /*void LedDevice::send() {
+          int cmd_bit = 0x710;
+          send(cmd_bit); //send cmd(0x00)
+          for (uint32_t i = 12*16; i-- > 12*15;) send(led[i-6]); //16
+          send(cmd_bit); //send cmd(0x00)
+          for (uint32_t i = 12*15; i-- > 12*14;) send(led[i-6]); //15
+          send(cmd_bit); //send cmd(0x00)
+          for (uint32_t i = 12*14; i-- > 12*13;) send(led[i-6]); //14
+          send(cmd_bit); //send cmd(0x00)
+          for (uint32_t i = 12*13; i-- > 12*12;) send(led[i-6]); //13
+          send(cmd_bit); //send cmd(0x00)
+          for (uint32_t i = 12*12; i-- > 12*11;) send(led[i-6]); //12
+          send(cmd_bit); //send cmd(0x00)
+          for (uint32_t i = 12*11; i-- > 12*10;) send(led[i-6]); //11
+          send(cmd_bit); //send cmd(0x00)
+          for (uint32_t i = 12*10; i-- > 12*9;) send(led[i-6]); //10
+          send(cmd_bit); //send cmd(0x00)
+          for (uint32_t i = 12*9; i-- > 12*8;) send(led[i-6]); //9
+
+          //barra 1
+          send(cmd_bit); //send cmd(0x00)
+          for (uint32_t i = 12*8; i-- > 12*7;) send(led[i]); //8
+          send(cmd_bit); //send cmd(0x00)
+          for (uint32_t i = 12*7; i-- > 12*6;) send(led[i]); //7
+          send(cmd_bit); //send cmd(0x00)
+          for (uint32_t i = 12*6; i-- > 12*5;) send(led[i]); //6
+          send(cmd_bit); //send cmd(0x00)
+          for (uint32_t i = 12*5; i-- > 12*4;) send(led[i]); //5
+          send(cmd_bit); //send cmd(0x00)
+          for (uint32_t i = 12*4; i-- > 12*3;) send(led[i]); //4
+          send(cmd_bit); //send cmd(0x00)
+          for (uint32_t i = 12*3; i-- > 12*2;) send(led[i]); //3
+          send(cmd_bit); //send cmd(0x00)
+          for (uint32_t i = 12*2; i-- > 12*1;) send(led[i]); //2
+          send(cmd_bit); //send cmd(0x00)
+          for (uint32_t i = 12*1; i-- > 12*0;) send(led[i]); //1
+          //latch();
+    }*/
+
     void LedDevice::send() {
-        if (reverseShow) {
-            send(0x00); //send cmd(0x00)
-            for (uint32_t i = 96; i-- > 84;) send(led[i]);
-            send(0x00); //send cmd(0x00)
-            for (uint32_t i = 84; i-- > 72;) send(led[i]);
-            send(0x00); //send cmd(0x00)
-            for (uint32_t i = 72; i-- > 60;) send(led[i]);
-            send(0x00); //send cmd(0x00)
-            for (uint32_t i = 60; i-- > 48;) send(led[i]);
-            send(0x00); //send cmd(0x00)
-            for (uint32_t i = 48; i-- > 36;) send(led[i]);
-            send(0x00); //send cmd(0x00)
-            for (uint32_t i = 36; i-- > 24;) send(led[i]);
-            send(0x00); //send cmd(0x00)
-            for (uint32_t i = 24; i-- > 12;) send(led[i]);
-            send(0x00); //send cmd(0x00)
-            for (uint32_t i = 12; i-- > 0;) send(led[i]);
-        }
+          int cmd_bit = 0x710;
+          //barra 2
+          send(cmd_bit); //send cmd(0x00)
+          for (uint32_t i = 12*16; i-- > 12*15;) send(led[i-6]); //16
 
-        else {
-            send(0x00);
-            for (uint32_t i = 0; i < 12; i++) send(led[i]);
-            send(0x00);
-            for (uint32_t i = 12; i < 24; i++) send(led[i]);
-        }
-
-        latch();
+          for(uint32_t j = 15; j > 8; j--){
+            send(cmd_bit);
+            for (uint32_t i = 12*j; i-- > 12*(j-1);) send(led[i-6]);
+          }
+          //barra 1
+          for(uint32_t j = 8; j > 0; j--){
+            send(cmd_bit);
+            for (uint32_t i = 12*j; i-- > 12*(j-1);) send(led[i]);
+          }
     }
 
     void LedDevice::latch() {
@@ -83,7 +109,7 @@ namespace Origin {
     }
 }
 
-void LED_Bar::setLed (int ledNum, uint16_t r, uint16_t g, uint16_t b) {
+void LED_Bar::setLed(int ledNum, uint16_t r, uint16_t g, uint16_t b) {
     uint8_t r_pos = (ledNum-1)*3;
     uint8_t g_pos = (ledNum-1)*3+1;
     uint8_t b_pos = (ledNum-1)*3+2;
@@ -100,4 +126,8 @@ void LED_Bar::toggleLed(uint32_t ledNo) {
         countOfShows - 1;
     led[i] = led[i] ? LED_TURN_OFF : LED_FULL_BRIGHTNESS;
     send();
+}
+
+void LED_Bar::show() {
+    latch();
 }
