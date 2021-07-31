@@ -25,7 +25,6 @@ namespace Origin {
         uint32_t countOfLed();
         void send(uint16_t bits);
         void send();
-        void reverse();
         void latch();
     };
 }
@@ -36,9 +35,7 @@ class LED_Bar : Origin::LedDevice {
         Origin::LedDevice(pinClock, pinData, greenToRed, numLeds, type) {
     }
     void begin() {}
-    void toggleLed(uint32_t ledNo);
-    void setLed(int ledNum, uint16_t r, uint16_t g, uint16_t b);
-    uint32_t getBits();
+    void setLed(int ledNum, uint32_t r, uint32_t g, uint32_t b);
     void show();
 };
 

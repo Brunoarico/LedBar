@@ -3,9 +3,11 @@ from pythonosc import udp_client
 import sys
 import colorsys
 import random
+import socket
+import struct
 NUM_LEDS = 60
 
-client = udp_client.SimpleUDPClient("192.168.0.198", 2807)
+client = udp_client.SimpleUDPClient("192.168.15.6", 2807)
 
 def generate_pattern():
     arr = [0]*3*NUM_LEDS
@@ -28,7 +30,7 @@ def rotate ():
         arr.append(g)
         arr.append(b)
         client.send_message("/LEDS", arr)
-        time.sleep(0.2)
+        time.sleep(0.015)
         print(arr)
 
 def unique ():
@@ -43,7 +45,7 @@ def unique ():
         arr.append(g)
         arr.append(b)
         client.send_message("/LEDS", arr)
-        time.sleep(0.2)
+        time.sleep(0.1)
         print(arr)
 
 def off ():
@@ -51,8 +53,27 @@ def off ():
     client.send_message("/LEDS", arr)
     print(arr)
 
+def fade ():
+    t = 0.1
+    inter = 100
+    i = 0.
+    stp = 0.01
+    while(True):
+        while(i < 1):
+            print(i)
+            arr = [i]*3*NUM_LEDS
+            client.send_message("/LEDS", arr)
+            time.sleep(t)
+            i += stp;
+
+        while(i > 0.01):
+            print(i)
+            arr = [i]*3*NUM_LEDS
+            client.send_message("/LEDS", arr)
+            time.sleep(t)
+            i -= stp;
+
 def inc ():
-    
     arr = []
     for i in range(NUM_LEDS):
         r = random.uniform(0, 0.5)
@@ -67,6 +88,8 @@ def inc ():
         time.sleep(1)
 
 #rotate()
-off()
-inc()
-#client.send_message("/LEDS", [1,0.0,0.0, 0.0,1.,0.0, 0.,.0,1.0, 0.,01.,1.])
+#off()
+rotate()
+#fade()
+
+#client.send_message("/LEDS", [1,0,0])

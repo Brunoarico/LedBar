@@ -7,10 +7,10 @@
 #include <ArduinoOTA.h>
 #include <ssid.h>
 
-#define RESOLUTION 16
+#define RESOLUTION 8191
 #define NUM_LEDS 60
 
-const char* ssid     = SSID;
+const char* ssid = SSID;
 const char* password = PASSWORD;
 const int udpPort = PORT;
 
@@ -51,37 +51,20 @@ void effect() {
   }
 }
 
-/*void processLED (OSCMessage &msg) {
-  for(int a = 0, b = 0; a < NUM_LEDS*3; a=a+3, b++)
-    if (msg.isInt(a)||msg.isInt(a+1)||msg.isInt(a+2)) bar.setLed(b, msg.getInt(a),msg.getInt(a+1),msg.getInt(a+2));
-}*/
-
 void processLED (OSCMessage &msg) {
-
-
-  if(msg.size() < NUM_LEDS*3) {
-    int part = (NUM_LEDS*3) / (msg.size()/3);
-    int msg_count = 0;
-    int segment = part;
-    Serial.println(part);
-    Serial.println(msg.size()/3);
-    for(int i = 0; i < NUM_LEDS*3; i = i+3) {
-
-      Serial.println(String((i/3)+1) + " " + String(msg.getFloat(msg_count)) + " " + String(msg.getFloat(msg_count+1)) + " " + String(msg.getFloat(msg_count+2)));
-      bar.setLed((i/3)+1, msg.getFloat(msg_count)*RESOLUTION, msg.getFloat(msg_count+1)*RESOLUTION, msg.getFloat(msg_count+2)*RESOLUTION);
-
-      if(i >= segment) segment += part, msg_count+=3;
+  //unsigned long int t_i = millis();
+  float rgb[3];
+  for(int a = 0; a < msg.size(); a = a+3) {
+    for (int i = 0; i < 3; i++){
+      if(msg.isFloat(a+i)) rgb[i] = msg.getFloat(a+i)*RESOLUTION;
+      else if(msg.isInt(a+i)) rgb[i] = float(msg.getInt(a+i)==1)*RESOLUTION;
+      else rgb[i] = 0;
     }
-  }
-  else {
-    for(int a = 0; a < msg.size(); a = a+3) {
-      if(msg.isFloat(a) || msg.isFloat(a+1) || msg.isFloat(a+2)) {
-          Serial.println(String(a/3) + " " + String(msg.getFloat(a)) + " " + String(msg.getFloat(a+1)) + " " + String(msg.getFloat(a+2)));
-          bar.setLed((a/3)+1, msg.getFloat(a)*RESOLUTION, msg.getFloat(a+1)*RESOLUTION, msg.getFloat(a+2)*RESOLUTION);
-      }
-    }
+    //Serial.println(String(a/3) + " " + String(rgb[0]) + " " + String(rgb[1]) + " " + String(rgb[2]));
+    bar.setLed((a/3)+1, rgb[0], rgb[1], rgb[2]);
   }
   bar.show();
+  //Serial.println("Tempo: " + String(millis() - t_i));
 }
 
 void receiveMsg(){
@@ -93,6 +76,7 @@ void receiveMsg(){
     else Serial.println("Error in msg");
   }
 }
+
 
 void setup() {
     // nothing to initialize
